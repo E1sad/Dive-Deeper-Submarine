@@ -6,7 +6,8 @@ using UnityEngine;
 
 namespace SOG.GameManger {
   public class GameManager : MonoBehaviour {
-    //[Header("Variables")]
+    [Header("Variables")]
+    [SerializeField] private GameStateEnum _starterState;
 
     //[Header("Links")]
 
@@ -57,8 +58,8 @@ namespace SOG.GameManger {
 
     #region Unity's Methods
     private void Start() {
-      _previousGameState = GameStateEnum.IDLE;
-      _currentGameState = GameStateEnum.IDLE; OnGameStateChanged(_currentGameState);
+      _previousGameState = _starterState;
+      _currentGameState = _starterState; OnGameStateChanged(_currentGameState);
     }
     private void Update() {
       GameStateChange();
