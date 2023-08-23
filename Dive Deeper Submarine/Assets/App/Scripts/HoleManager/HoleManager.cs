@@ -2,8 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace SOG
-{
+namespace SOG.HoleManager {
   public class HoleManager : MonoBehaviour{
     [Header("Hole Generetaion")]
     [SerializeField] private float _maxTimeToNewHole;
@@ -32,15 +31,18 @@ namespace SOG
     private void InstantiateHoles() {
       for (int i = 0; i < _numberOfHoles; i++) {
         GameObject hole = Instantiate(_hole, parent);
+        Hole holeScript = hole.GetComponent<Hole>();
+        holeScript.Interactable = false; holeScript.Elapsed = 0f; holeScript.Interacted = false;
         hole.SetActive(false);_allHoles.Add(hole);_usableHoles.Add(hole);}
     }
     private GameObject GetHole() {
       if (_usableHoles.Count <= 0) return null;
       GameObject hole = _usableHoles[0]; _usableHoles.RemoveAt(0);_usedHoles.Add(hole);return hole;
     }
-    private void RemoveHole(GameObject hole) {
-      hole.SetActive(false) ; _usableHoles.Add(hole); 
-      _usedHoles.RemoveAll(Hole => Hole == hole);
+    private void RemoveHole(Hole hole) {
+      hole.Interactable = false; hole.Elapsed = 0f; hole.Interacted = false;
+      hole.gameObject.SetActive(false) ; _usableHoles.Add(hole.gameObject); 
+      _usedHoles.RemoveAll(Hole => Hole == hole.gameObject); MinusHoleEvent.Raise();
     }
     private Vector3 getPositionForHole() {
       float x = 0f; int k = 0;
@@ -48,12 +50,11 @@ namespace SOG
       bool isPerfectPosition =false , isColliding = false;
       while (k < 100) {
         x = (float)(_random.NextDouble() * (_maxXToNewHole - _minXToNewHole) + _minXToNewHole);
+        if (x < 1.5 && x > -1.5) continue;
         for (int i = 0; i < _usedHoles.Count; i++) {
-          Debug.Log($"{i}: {x}");
           if (_usedHoles[i].transform.position.x - x < 2 && _usedHoles[i].transform.position.x - x > -2) {
             isColliding = true; break;}}
         if (!isColliding) { isPerfectPosition = true; break;} else { isColliding = false; k++; }}
-      Debug.Log("--------------------------------");
       if (isPerfectPosition) return new Vector3(x, y, 0f);
       else {return new Vector3(9, y, 0f);}
     }
@@ -61,10 +62,11 @@ namespace SOG
       float elapsed = 0f;
       float time = (float)(_random.NextDouble()*(_maxTimeToNewHole - _minTimeToNewHole) +_minTimeToNewHole);
       while (true) {
+        if(_usableHoles.Count == 0) { yield return null; }
         if (time <= elapsed) {
           Vector3 positionOfHole = getPositionForHole(); GameObject hole = GetHole();
           if (hole != null) {
-            hole.transform.position = positionOfHole; hole.SetActive(true);}
+            hole.transform.position = positionOfHole; hole.SetActive(true); PlusHoleEvent.Raise();}
           time = (float)(_random.NextDouble() * (_maxTimeToNewHole - _minTimeToNewHole) + _minTimeToNewHole);
           elapsed = 0f;}
         elapsed += Time.deltaTime * LocalTime.DeltaTime;
@@ -82,6 +84,7 @@ namespace SOG
       if ((_maxTimeToNewHole - _depth / _difficultyMultiplier) >= _minTimeToNewHole)
         _maxTimeToNewHole -= _depth / _difficultyMultiplier;
     }
+    private void DestroyHoleEventHandler(Hole hole) {RemoveHole(hole);}
     #endregion
 
     #region Unity's Methods
@@ -94,9 +97,11 @@ namespace SOG
     }
     private void OnEnable() {
       DepthManager.DepthEvent.EventDepth += DepthEventHandler;
+      DestroyHoleEvent.EventDestroyHole += DestroyHoleEventHandler;
     }
     private void OnDisable() {
       DepthManager.DepthEvent.EventDepth -= DepthEventHandler;
+      DestroyHoleEvent.EventDestroyHole -= DestroyHoleEventHandler;
     }
     #endregion
   }

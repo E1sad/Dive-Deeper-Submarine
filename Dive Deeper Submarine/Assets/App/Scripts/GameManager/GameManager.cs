@@ -16,7 +16,6 @@ namespace SOG.GameManger {
 
     #region My Methods
     private void OnGameStateChanged(GameStateEnum current){
-      Debug.Log(current);
       OnGameStateChangedEvent.Raise(new OnGameStateChangeEventArg(current, _previousGameState));
       switch (current){
         case GameStateEnum.GAME_PLAY: LocalTime.DeltaTime = 1f; break;
