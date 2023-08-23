@@ -32,7 +32,6 @@ namespace SOG.HoleManager{
     #region Unity's Methods
     private void Update() {
       Repair();
-      /*Debug.Log(_interactable);*/
     }
     private void OnTriggerEnter2D(Collider2D collision) {
       if (collision.gameObject.CompareTag("Player")) { _interactable = true;}
