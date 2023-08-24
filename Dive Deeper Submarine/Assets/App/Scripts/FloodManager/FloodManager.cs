@@ -16,6 +16,7 @@ namespace SOG.FloodManager{
     private float _waterLevel;
     private bool _interactable;
     private bool _interacted;
+    private bool _isElectricPowerOn;
 
     #region My Methods
     private void WaterLevel() {
@@ -25,6 +26,7 @@ namespace SOG.FloodManager{
         new Vector3(_waterGameObject.transform.localScale.x, _waterLevel, _waterGameObject.transform.localScale.z);
     }
     private void PumpWater() {
+      if (!_isElectricPowerOn) return;
       if (!_interactable || _waterLevel <= 0) return;
       if (_interacted) {_waterLevel -= _quantityOfWaterPumpedAtOnce*Time.deltaTime * LocalTime.DeltaTime; }
     }
@@ -32,6 +34,8 @@ namespace SOG.FloodManager{
     private void DecreaseHoleNumber() { _holeNumber--;}
     private void InteractionButtonPressedEventHandler() { _interacted = true; }
     private void InteractionButtonReleasedEventHandler() { _interacted = false; }
+    private void ElectricPowerOutEventHandler() { _isElectricPowerOn = false; }
+    private void ElectricPowerRestoredEventHandler() { _isElectricPowerOn = true; }
     #endregion
 
     #region Unity's Methods
@@ -40,6 +44,7 @@ namespace SOG.FloodManager{
       _waterLevel = 0f; //Temporary until GameStateLogic implemented
       _interactable = false; //Temporary until GameStateLogic implemented
       _interacted = false; //Temporary until GameStateLogic implemented
+      _isElectricPowerOn = true; //Temporary until GameStateLogic implemented
     }
     private void Update() {
       WaterLevel(); PumpWater();
@@ -55,12 +60,17 @@ namespace SOG.FloodManager{
       HoleManager.MinusHoleEvent.EventMinusHole += DecreaseHoleNumber;
       Player.InteractionButtonPressedEvent.EventInteractionButtonPressed += InteractionButtonPressedEventHandler;
       Player.InteractionButtonRleasedEvent.EventInteractionButtonRleased += InteractionButtonReleasedEventHandler;
+      ElectricManager.ElectricPowerOutEvent.EventElectricPowerOut += ElectricPowerOutEventHandler;
+      ElectricManager.ElectricPowerRestoredEvent.EventElectricPowerRestored += ElectricPowerRestoredEventHandler;
     }
     private void OnDisable() {
       HoleManager.PlusHoleEvent.EventPlusHole -= IncreaseHoleNumber;
       HoleManager.MinusHoleEvent.EventMinusHole -= DecreaseHoleNumber;
       Player.InteractionButtonPressedEvent.EventInteractionButtonPressed -= InteractionButtonPressedEventHandler;
       Player.InteractionButtonRleasedEvent.EventInteractionButtonRleased -= InteractionButtonReleasedEventHandler;
+      ElectricManager.ElectricPowerOutEvent.EventElectricPowerOut -= ElectricPowerOutEventHandler;
+      EngineManager.EngineRepairedEvent.EventEngineRepaired -= ElectricPowerRestoredEventHandler;
+      ElectricManager.ElectricPowerRestoredEvent.EventElectricPowerRestored -= ElectricPowerRestoredEventHandler;
     }
     #endregion
   }
