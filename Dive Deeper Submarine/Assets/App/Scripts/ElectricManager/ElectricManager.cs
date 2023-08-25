@@ -1,3 +1,4 @@
+using SOG.GameManger;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -22,6 +23,21 @@ namespace SOG.ElectricManager{
     private Coroutine _engineFailureRoutine;
 
     #region My Methods
+    private void OnGameStateChanged(GameStateEnum current, GameStateEnum previous) {
+      switch (current) {
+        case GameStateEnum.GAME_PLAY: GamePlayState(previous); break;
+        case GameStateEnum.IDLE: IdleState(); break;
+        case GameStateEnum.PAUSED: break;}
+    }
+    private void GamePlayState(GameStateEnum previous) {
+      if (previous == GameStateEnum.IDLE) { 
+        StartElectricPowerFailureCoroutine(); _interactButton.gameObject.SetActive(false); 
+        _filler.gameObject.SetActive(false); _isElectricOn = true; _interactable = false; _interacted = false;}
+    }
+    private void IdleState() {
+      StopElectricPowerFailureCoroutine(); _interactButton.gameObject.SetActive(false);
+      _filler.gameObject.SetActive(false); _isElectricOn = true; _interactable = false; _interacted = false;
+    }
     private void Repair() {
       if (_isElectricOn) return;
       if (!_interactable) return;
@@ -53,16 +69,12 @@ namespace SOG.ElectricManager{
     }
     private void InteractionButtonPressedEventHandler() { _interacted = true; }
     private void InteractionButtonReleasedEventHandler() { _interacted = false; }
+    private void EventGameStateChangedHandler(OnGameStateChangeEventArg eventArg) {
+      OnGameStateChanged(eventArg.Current, eventArg.Previous);
+    }
     #endregion
 
     #region Unity's Methods
-    private void Start() {
-      _interactable = false; //Temporary until GameStateLogic implemented
-      _interacted = false; //Temporary until GameStateLogic implemented
-      _isElectricOn = true;
-      _interactButton.gameObject.SetActive(false); _filler.gameObject.SetActive(false);
-      StartElectricPowerFailureCoroutine();
-    }
     private void Update() {
       Repair();
     }
@@ -78,10 +90,12 @@ namespace SOG.ElectricManager{
     private void OnEnable() {
       Player.InteractionButtonPressedEvent.EventInteractionButtonPressed += InteractionButtonPressedEventHandler;
       Player.InteractionButtonRleasedEvent.EventInteractionButtonRleased += InteractionButtonReleasedEventHandler;
+      OnGameStateChangedEvent.EventGameStateChanged += EventGameStateChangedHandler;
     }
     private void OnDisable() {
       Player.InteractionButtonPressedEvent.EventInteractionButtonPressed -= InteractionButtonPressedEventHandler;
       Player.InteractionButtonRleasedEvent.EventInteractionButtonRleased -= InteractionButtonReleasedEventHandler;
+      OnGameStateChangedEvent.EventGameStateChanged -= EventGameStateChangedHandler;
     }
     #endregion
   }

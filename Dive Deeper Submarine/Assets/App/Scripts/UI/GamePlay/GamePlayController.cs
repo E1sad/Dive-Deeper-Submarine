@@ -19,6 +19,9 @@ namespace SOG.UI.GamePlay{
     private void onPauseEventHandler(){
       view.gameObject.SetActive(false);
     }
+    private void DepthEventHandler(int depth) {
+      view.SetScoreText(depth);
+    }
     #endregion
 
     #region Unity's Methods
@@ -30,6 +33,7 @@ namespace SOG.UI.GamePlay{
       PlayButtonEvent.OnPlayButtonPressedEvent += onGamePlayEventHandler;
       GameOverEvent.OnGameOverEvent += onPauseEventHandler;
       RestartEvent.OnRestartEvent += onGamePlayEventHandler;
+      DepthManager.DepthEvent.EventDepth += DepthEventHandler;
     }
     private void OnDisable()
     {
@@ -39,6 +43,7 @@ namespace SOG.UI.GamePlay{
       PlayButtonEvent.OnPlayButtonPressedEvent -= onGamePlayEventHandler;
       GameOverEvent.OnGameOverEvent -= onPauseEventHandler;
       RestartEvent.OnRestartEvent -= onGamePlayEventHandler;
+      DepthManager.DepthEvent.EventDepth -= DepthEventHandler;
     }
     #endregion
   }

@@ -1,3 +1,4 @@
+using SOG.GameManger;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -16,6 +17,18 @@ namespace SOG.Player{
     //Internal varibales
 
     #region My Methods
+    private void OnGameStateChanged(GameStateEnum current, GameStateEnum previous) {
+      switch (current) {
+        case GameStateEnum.GAME_PLAY: GamePlayState(previous); break;
+        case GameStateEnum.IDLE: IdleState(); break;
+        case GameStateEnum.PAUSED: break;}
+    }
+    private void GamePlayState(GameStateEnum previous) {
+      if (previous == GameStateEnum.IDLE) {}
+    }
+    private void IdleState() {
+      transform.position = new Vector3(0f,0f,0f);
+    }
     private void PlayerMovement() {
       float horizontalInput = Input.GetAxisRaw("Horizontal");
       _playerRb.velocity = new Vector2(horizontalInput * _speedMultiplier, _playerRb.velocity.y)
@@ -25,11 +38,20 @@ namespace SOG.Player{
         _captainAnimator.SetBool("IsRunning", true);
       }else {_captainAnimator.SetBool("IsRunning", false);}
     }
+    private void EventGameStateChangedHandler(OnGameStateChangeEventArg eventArg) {
+      OnGameStateChanged(eventArg.Current, eventArg.Previous);
+    }
     #endregion 
 
     #region Unity's Methods
     private void Update() {
       PlayerMovement();
+    }
+    private void OnEnable() {
+      OnGameStateChangedEvent.EventGameStateChanged += EventGameStateChangedHandler;
+    }
+    private void OnDisable() {
+      OnGameStateChangedEvent.EventGameStateChanged -= EventGameStateChangedHandler;
     }
     #endregion
   }

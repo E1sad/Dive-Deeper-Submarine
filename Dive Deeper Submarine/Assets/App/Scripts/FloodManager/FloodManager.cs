@@ -1,3 +1,5 @@
+using SOG.GameManger;
+using SOG.UI.GameOver;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -21,8 +23,24 @@ namespace SOG.FloodManager{
     private bool _isElectricPowerOn;
 
     #region My Methods
+    private void OnGameStateChanged(GameStateEnum current, GameStateEnum previous) {
+      switch (current) {
+        case GameStateEnum.GAME_PLAY: GamePlayState(previous); break;
+        case GameStateEnum.IDLE: IdleState(); break;
+        case GameStateEnum.PAUSED: break;
+      }
+    }
+    private void GamePlayState(GameStateEnum previous) {
+      if (previous == GameStateEnum.IDLE) {
+        _holeNumber = 0; _waterLevel = 0f; _interactable = false; _interacted = false; _isElectricPowerOn = true;
+        _interactButton.gameObject.SetActive(false); _filler.gameObject.SetActive(false);}
+    }
+    private void IdleState() {
+      _holeNumber = 0; _waterLevel = 0f; _interactable = false; _interacted = false; _isElectricPowerOn = true;
+      _interactButton.gameObject.SetActive(false); _filler.gameObject.SetActive(false);
+    }
     private void WaterLevel() {
-      if (_waterLevel >= 4) { Debug.Log("GameOver");  return; }
+      if (_waterLevel >= 4) { GameOverEvent.Raise(); _waterLevel = 0;  return; }
       _waterLevel += _holeNumber * _waterLevelIncreaseMultiplier * Time.deltaTime * LocalTime.DeltaTime;
       _waterGameObject.transform.localScale =
         new Vector3(_waterGameObject.transform.localScale.x, _waterLevel, _waterGameObject.transform.localScale.z);
@@ -41,18 +59,12 @@ namespace SOG.FloodManager{
     private void InteractionButtonReleasedEventHandler() { _interacted = false; }
     private void ElectricPowerOutEventHandler() { _isElectricPowerOn = false; }
     private void ElectricPowerRestoredEventHandler() { _isElectricPowerOn = true; }
+    private void EventGameStateChangedHandler(OnGameStateChangeEventArg eventArg) {
+      OnGameStateChanged(eventArg.Current, eventArg.Previous);
+    }
     #endregion
 
     #region Unity's Methods
-    private void Start() {
-      _holeNumber = 0; //Temporary until GameStateLogic implemented
-      _waterLevel = 0f; //Temporary until GameStateLogic implemented
-      _interactable = false; //Temporary until GameStateLogic implemented
-      _interacted = false; //Temporary until GameStateLogic implemented
-      _isElectricPowerOn = true; //Temporary until GameStateLogic implemented
-      _interactButton.gameObject.SetActive(false);
-      _filler.gameObject.SetActive(false);
-    }
     private void Update() {
       WaterLevel(); PumpWater();
     }
@@ -71,6 +83,8 @@ namespace SOG.FloodManager{
       Player.InteractionButtonRleasedEvent.EventInteractionButtonRleased += InteractionButtonReleasedEventHandler;
       ElectricManager.ElectricPowerOutEvent.EventElectricPowerOut += ElectricPowerOutEventHandler;
       ElectricManager.ElectricPowerRestoredEvent.EventElectricPowerRestored += ElectricPowerRestoredEventHandler;
+      OnGameStateChangedEvent.EventGameStateChanged += EventGameStateChangedHandler;
+
     }
     private void OnDisable() {
       HoleManager.PlusHoleEvent.EventPlusHole -= IncreaseHoleNumber;
@@ -80,6 +94,7 @@ namespace SOG.FloodManager{
       ElectricManager.ElectricPowerOutEvent.EventElectricPowerOut -= ElectricPowerOutEventHandler;
       EngineManager.EngineRepairedEvent.EventEngineRepaired -= ElectricPowerRestoredEventHandler;
       ElectricManager.ElectricPowerRestoredEvent.EventElectricPowerRestored -= ElectricPowerRestoredEventHandler;
+      OnGameStateChangedEvent.EventGameStateChanged -= EventGameStateChangedHandler;
     }
     #endregion
   }

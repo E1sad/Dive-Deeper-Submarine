@@ -1,3 +1,4 @@
+using SOG.UI.GameOver;
 using SOG.UI.Menu;
 using SOG.UI.Pause;
 using System.Collections;
@@ -53,6 +54,7 @@ namespace SOG.GameManger {
       _currentGameState = GameStateEnum.GAME_PLAY;
       OnGameStateChanged(GameStateEnum.GAME_PLAY); _previousGameState = GameStateEnum.GAME_PLAY;
     }
+    private void onGameOverEventHandler() { LocalTime.DeltaTime = 0f; }
     #endregion
 
     #region Unity's Methods
@@ -68,12 +70,15 @@ namespace SOG.GameManger {
       UI.Pause.ToMenuEvent.OnToMenuEvent += OnToMenuButtonPressed;
       UI.Pause.ContinueEvent.OnContinueEvent += OnContinueButtonPressed;
       UI.Pause.RestartEvent.OnRestartEvent += OnRestartButtonPressed;
+      GameOverEvent.OnGameOverEvent += onGameOverEventHandler;
     }
     private void OnDisable() {
       PlayButtonEvent.OnPlayButtonPressedEvent -= OnPlayButtonPressed;
       UI.Pause.ToMenuEvent.OnToMenuEvent -= OnToMenuButtonPressed;
       UI.Pause.ContinueEvent.OnContinueEvent -= OnContinueButtonPressed;
       UI.Pause.RestartEvent.OnRestartEvent -= OnRestartButtonPressed;
+      GameOverEvent.OnGameOverEvent -= onGameOverEventHandler;
+
     }
     #endregion
   }

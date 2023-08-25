@@ -1,4 +1,6 @@
 using SOG.EngineManager;
+using SOG.GameManger;
+using SOG.UI.GameOver;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,10 +14,23 @@ namespace SOG.DepthManager{
 
     //Internal varibales
     private float _depth;
+    private int _bestDepth = 0;
     private int _previousDepth = 0;
     private bool _isEngineWorking;
 
     #region My Methods
+    private void OnGameStateChanged(GameStateEnum current, GameStateEnum previous) {
+      switch (current) {
+        case GameStateEnum.GAME_PLAY: GamePlayState(previous); break;
+        case GameStateEnum.IDLE: IdleState(); break;
+        case GameStateEnum.PAUSED: break;}
+    }
+    private void GamePlayState(GameStateEnum previous) {
+      if (previous == GameStateEnum.IDLE) { _depth = 0f; DepthEvent.Raise((int)_depth); _isEngineWorking = true; }
+    }
+    private void IdleState() {
+      _depth = 0f; DepthEvent.Raise((int)_depth); _previousDepth = 0; _isEngineWorking = true;
+    }
     private void Dive() {
       if (!_isEngineWorking) return;
       _depth += _diveSpeed * Time.deltaTime * LocalTime.DeltaTime;
@@ -24,22 +39,30 @@ namespace SOG.DepthManager{
     }
     private void EngineRepairedEventHandler() { _isEngineWorking = true; }
     private void EngineBrokeEventHandler() { _isEngineWorking = false; }
+    private void onGameOverEventHandler() {
+      if(_bestDepth <= _previousDepth) { _bestDepth = _previousDepth; }
+      GameOverDepthScoreEvent.Raise(_previousDepth, _bestDepth);
+    }
+    private void EventGameStateChangedHandler(OnGameStateChangeEventArg eventArg) {
+      OnGameStateChanged(eventArg.Current, eventArg.Previous);
+    }
     #endregion
 
     #region Unity's Methods
-    private void Start() {
-      _isEngineWorking = true;
-    }
     private void FixedUpdate() {
       Dive();
     }
     private void OnEnable() {
       EngineRepairedEvent.EventEngineRepaired += EngineRepairedEventHandler;
       EngineBrokeEvent.EventEngineBroke += EngineBrokeEventHandler;
+      GameOverEvent.OnGameOverEvent += onGameOverEventHandler;
+      OnGameStateChangedEvent.EventGameStateChanged += EventGameStateChangedHandler;
     }
     private void OnDisable() {
       EngineRepairedEvent.EventEngineRepaired -= EngineRepairedEventHandler;
       EngineBrokeEvent.EventEngineBroke -= EngineBrokeEventHandler;
+      GameOverEvent.OnGameOverEvent -= onGameOverEventHandler;
+      OnGameStateChangedEvent.EventGameStateChanged -= EventGameStateChangedHandler;
     }
     #endregion
   }

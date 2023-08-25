@@ -1,3 +1,4 @@
+using SOG.GameManger;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -28,6 +29,20 @@ namespace SOG.HoleManager {
     private Coroutine _generateHoleRoutine;
 
     #region My Methods
+    private void OnGameStateChanged(GameStateEnum current, GameStateEnum previous) {
+      switch (current) {
+        case GameStateEnum.GAME_PLAY: GamePlayState(previous); break;
+        case GameStateEnum.IDLE: IdleState(); break;
+        case GameStateEnum.PAUSED: break;}
+    }
+    private void GamePlayState(GameStateEnum previous) {
+      if (previous == GameStateEnum.IDLE) StartGenerateHole();
+    }
+    private void IdleState() {
+      StopGenerateHole();
+      int count = _usedHoles.Count;
+      for (int i = 0; i < count; i++) {RemoveHole(_usedHoles[0].GetComponent<Hole>());}
+    }
     private void InstantiateHoles() {
       for (int i = 0; i < _numberOfHoles; i++) {
         GameObject hole = Instantiate(_hole, parent);
@@ -87,23 +102,30 @@ namespace SOG.HoleManager {
         _maxTimeToNewHole -= _depth / _difficultyMultiplier;
     }
     private void DestroyHoleEventHandler(Hole hole) {RemoveHole(hole);}
+    private void EventGameStateChangedHandler(OnGameStateChangeEventArg eventArg) {
+      OnGameStateChanged(eventArg.Current, eventArg.Previous);
+    }
     #endregion
 
     #region Unity's Methods
-    private void Start() {
+    private void Awake() {
       _allHoles = new List<GameObject>();
       _usedHoles = new List<GameObject>();
       _usableHoles = new List<GameObject>();
+    }
+    private void Start() {
+
       InstantiateHoles();
-      StartGenerateHole();
     }
     private void OnEnable() {
       DepthManager.DepthEvent.EventDepth += DepthEventHandler;
       DestroyHoleEvent.EventDestroyHole += DestroyHoleEventHandler;
+      OnGameStateChangedEvent.EventGameStateChanged += EventGameStateChangedHandler;  
     }
     private void OnDisable() {
       DepthManager.DepthEvent.EventDepth -= DepthEventHandler;
       DestroyHoleEvent.EventDestroyHole -= DestroyHoleEventHandler;
+      OnGameStateChangedEvent.EventGameStateChanged -= EventGameStateChangedHandler;
     }
     #endregion
   }
