@@ -7,7 +7,9 @@ namespace SOG.HoleManager{
     [Header("Variables")]
     [SerializeField] private float _repairTime;
 
-    //[Header("Links")]
+    [Header("Links")]
+    [SerializeField] private RectTransform _interactButton;
+    [SerializeField] private UnityEngine.UI.Image _filler;
 
     //Internal varibales
     private bool _interacted;
@@ -21,9 +23,17 @@ namespace SOG.HoleManager{
     private void Repair() {
       if (!_interactable) return;
       if (_interacted) {
-        _elapsed += Time.deltaTime * LocalTime.DeltaTime;
-        if (_repairTime <= _elapsed) { DestroyHoleEvent.Raise(this); }
-      } else { _elapsed = 0f; }
+        _elapsed += Time.deltaTime * LocalTime.DeltaTime; _filler.fillAmount = _elapsed / _repairTime;
+        if (_repairTime <= _elapsed) { DestroyHoleEvent.Raise(this); _interactButton.gameObject.SetActive(false); }
+      } else { _elapsed = 0f; _filler.fillAmount = 0f; }
+    }
+    public void Instantiate() {
+      _interactButton.gameObject.SetActive(false); _filler.fillAmount = 0f;
+    }
+    public void PlacedInWorld() {
+      _filler.fillAmount = 0f;
+      float position = (0f - transform.position.y) + 1.4f;
+      _interactButton.localPosition = new Vector3(0f, position, 0f);
     }
     private void InteractionButtonPressedEventHandler() {_interacted = true;}
     private void InteractionButtonReleasedEventHandler() { _interacted = false; }
@@ -34,10 +44,12 @@ namespace SOG.HoleManager{
       Repair();
     }
     private void OnTriggerEnter2D(Collider2D collision) {
-      if (collision.gameObject.CompareTag("Player")) { _interactable = true;}
+      if (collision.gameObject.CompareTag("Player")) { 
+        _interactable = true; _interactButton.gameObject.SetActive(true);}
     }
     private void OnTriggerExit2D(Collider2D collision) {
-      if (collision.gameObject.CompareTag("Player")) {_interactable = false;}
+      if (collision.gameObject.CompareTag("Player")) {
+        _interactable = false; _interactButton.gameObject.SetActive(false);}
     }
     private void OnEnable() {
       Player.InteractionButtonPressedEvent.EventInteractionButtonPressed += InteractionButtonPressedEventHandler;

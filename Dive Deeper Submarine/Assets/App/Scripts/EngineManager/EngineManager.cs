@@ -9,7 +9,11 @@ namespace SOG.EngineManager{
     [SerializeField] private float _minTimeToBroke;
     [SerializeField] private float _timeToRepair;
 
-    //[Header("Links")]
+    [Header("Links")]
+    [SerializeField] private RectTransform _interactButton;
+    [SerializeField] private UnityEngine.UI.Image _filler;
+    [SerializeField] private GameObject _bubble;
+    [SerializeField] private ParticleSystem[] _bubbles;
 
     //Internal varibales
     private bool _interacted;
@@ -23,12 +27,12 @@ namespace SOG.EngineManager{
     private void Repair() {
       if (_isEngineWorking) return; 
       if (!_interactable) return;
+      _interactButton.gameObject.SetActive(true);
       if (_interacted) {
-        _elapsed += Time.deltaTime * LocalTime.DeltaTime;
+        _elapsed += Time.deltaTime * LocalTime.DeltaTime; _filler.fillAmount = _elapsed / _timeToRepair;
         if (_timeToRepair <= _elapsed) { EngineRepairedEvent.Raise(); ; _isEngineWorking = true;
-          StartEngineFailureCoroutine();
-          this.gameObject.GetComponent<SpriteRenderer>().color = Color.green;}
-      } else { _elapsed = 0f; }
+          StartEngineFailureCoroutine(); _interactButton.gameObject.SetActive(false); StartBubbles();}
+      } else { _elapsed = 0f; _filler.fillAmount = 0f; }
     }
     private IEnumerator EngineFailure() {
       float elapsed = 0f;
@@ -36,8 +40,7 @@ namespace SOG.EngineManager{
       while (true) {
         elapsed += Time.deltaTime * LocalTime.DeltaTime;
         if (failureTime <= elapsed) {EngineBrokeEvent.Raise(); _isEngineWorking = false; 
-          StopEngineFailureCoroutine();
-          this.gameObject.GetComponent<SpriteRenderer>().color = Color.black;}
+          StopEngineFailureCoroutine(); StopBubbles();}
         yield return null;}
     }
     private void StartEngineFailureCoroutine() {
@@ -47,7 +50,13 @@ namespace SOG.EngineManager{
     private void StopEngineFailureCoroutine() {
       if (_engineFailureRoutine != null) StopCoroutine(_engineFailureRoutine); _engineFailureRoutine = null;
     }
-      private void InteractionButtonPressedEventHandler() { _interacted = true; }
+    private void StopBubbles() {
+      for (int i = 0; i < _bubbles.Length; i++) {_bubbles[i].Stop();}
+    }
+    private void StartBubbles() {
+      for (int i = 0; i < _bubbles.Length; i++) { _bubbles[i].Play(); }
+    }
+    private void InteractionButtonPressedEventHandler() { _interacted = true; }
     private void InteractionButtonReleasedEventHandler() { _interacted = false; }
     #endregion
 
@@ -57,16 +66,21 @@ namespace SOG.EngineManager{
       _interactable = false; //Temporary until GameStateLogic implemented
       _interacted = false; //Temporary until GameStateLogic implemented
       _isEngineWorking = true;
+      _filler.fillAmount = 0f;
+      _interactButton.gameObject.SetActive(false);
       StartEngineFailureCoroutine();
     }
     private void Update() {
       Repair();
     }
     private void OnTriggerEnter2D(Collider2D collision) {
-      if (collision.gameObject.CompareTag("Player")) { _interactable = true; }
+      if (collision.gameObject.CompareTag("Player")) { 
+        _interactable = true; 
+        if(!_isEngineWorking) _interactButton.gameObject.SetActive(true);}
     }
     private void OnTriggerExit2D(Collider2D collision) {
-      if (collision.gameObject.CompareTag("Player")) { _interactable = false; }
+      if (collision.gameObject.CompareTag("Player")) { 
+        _interactable = false; _interactButton.gameObject.SetActive(false);}
     }
     private void OnEnable() {
       Player.InteractionButtonPressedEvent.EventInteractionButtonPressed += InteractionButtonPressedEventHandler;

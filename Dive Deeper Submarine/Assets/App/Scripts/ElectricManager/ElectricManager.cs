@@ -8,7 +8,11 @@ namespace SOG.ElectricManager{
     [SerializeField] private float _maxTimeToBroke;
     [SerializeField] private float _minTimeToBroke;
 
-    //[Header("Links")]
+    [Header("Links")]
+    [SerializeField] private Sprite _ElectricOn;
+    [SerializeField] private Sprite _ElectricOff;
+    [SerializeField] private RectTransform _interactButton;
+    [SerializeField] private UnityEngine.UI.Image _filler;
 
     //Internal varibales
     private bool _interacted;
@@ -21,10 +25,11 @@ namespace SOG.ElectricManager{
     private void Repair() {
       if (_isElectricOn) return;
       if (!_interactable) return;
+      _interactButton.gameObject.SetActive(true);
       if (_interacted) {
-          ElectricPowerRestoredEvent.Raise(); ; _isElectricOn = true;
-          StartElectricPowerFailureCoroutine();
-          this.gameObject.GetComponent<SpriteRenderer>().color = Color.green;}
+        _interactButton.gameObject.SetActive(false); ElectricPowerRestoredEvent.Raise(); ; _isElectricOn = true; 
+        StartElectricPowerFailureCoroutine(); this.gameObject.GetComponent<SpriteRenderer>().sprite=_ElectricOn;} 
+      else { _filler.gameObject.SetActive(false); }
     }
     private IEnumerator ElectricPowerFailure() {
       float elapsed = 0f;
@@ -34,7 +39,7 @@ namespace SOG.ElectricManager{
         if (failureTime <= elapsed) {
           ElectricPowerOutEvent.Raise(); _isElectricOn = false;
           StopElectricPowerFailureCoroutine();
-          this.gameObject.GetComponent<SpriteRenderer>().color = Color.black;
+          this.gameObject.GetComponent<SpriteRenderer>().sprite = _ElectricOff;
         }
         yield return null;
       }
@@ -55,16 +60,20 @@ namespace SOG.ElectricManager{
       _interactable = false; //Temporary until GameStateLogic implemented
       _interacted = false; //Temporary until GameStateLogic implemented
       _isElectricOn = true;
+      _interactButton.gameObject.SetActive(false); _filler.gameObject.SetActive(false);
       StartElectricPowerFailureCoroutine();
     }
     private void Update() {
       Repair();
     }
     private void OnTriggerEnter2D(Collider2D collision) {
-      if (collision.gameObject.CompareTag("Player")) { _interactable = true; }
+      if (collision.gameObject.CompareTag("Player")) {
+        _interactable = true;
+        if (!_isElectricOn){ _interactButton.gameObject.SetActive(true); _filler.gameObject.SetActive(false);}}
     }
     private void OnTriggerExit2D(Collider2D collision) {
-      if (collision.gameObject.CompareTag("Player")) { _interactable = false; }
+      if (collision.gameObject.CompareTag("Player")) { 
+        _interactable = false; _interactButton.gameObject.SetActive(false); _filler.gameObject.SetActive(false);}
     }
     private void OnEnable() {
       Player.InteractionButtonPressedEvent.EventInteractionButtonPressed += InteractionButtonPressedEventHandler;

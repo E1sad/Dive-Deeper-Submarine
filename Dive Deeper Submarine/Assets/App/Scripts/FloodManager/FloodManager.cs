@@ -10,6 +10,8 @@ namespace SOG.FloodManager{
 
     [Header("Links")]
     [SerializeField] private GameObject _waterGameObject;
+    [SerializeField] private RectTransform _interactButton;
+    [SerializeField] private UnityEngine.UI.Image _filler;
 
     //Internal varibales
     private int _holeNumber;
@@ -20,7 +22,7 @@ namespace SOG.FloodManager{
 
     #region My Methods
     private void WaterLevel() {
-      if (_waterLevel >= 5) { Debug.Log("GameOver");  return; }
+      if (_waterLevel >= 4) { Debug.Log("GameOver");  return; }
       _waterLevel += _holeNumber * _waterLevelIncreaseMultiplier * Time.deltaTime * LocalTime.DeltaTime;
       _waterGameObject.transform.localScale =
         new Vector3(_waterGameObject.transform.localScale.x, _waterLevel, _waterGameObject.transform.localScale.z);
@@ -28,7 +30,10 @@ namespace SOG.FloodManager{
     private void PumpWater() {
       if (!_isElectricPowerOn) return;
       if (!_interactable || _waterLevel <= 0) return;
-      if (_interacted) {_waterLevel -= _quantityOfWaterPumpedAtOnce*Time.deltaTime * LocalTime.DeltaTime; }
+      if (_interacted) {
+        _waterLevel -= _quantityOfWaterPumpedAtOnce*Time.deltaTime * LocalTime.DeltaTime;
+        _filler.gameObject.SetActive(true); } 
+      else { _filler.gameObject.SetActive(false); }
     }
     private void IncreaseHoleNumber() {_holeNumber++;}
     private void DecreaseHoleNumber() { _holeNumber--;}
@@ -45,15 +50,19 @@ namespace SOG.FloodManager{
       _interactable = false; //Temporary until GameStateLogic implemented
       _interacted = false; //Temporary until GameStateLogic implemented
       _isElectricPowerOn = true; //Temporary until GameStateLogic implemented
+      _interactButton.gameObject.SetActive(false);
+      _filler.gameObject.SetActive(false);
     }
     private void Update() {
       WaterLevel(); PumpWater();
     }
     private void OnTriggerEnter2D(Collider2D collision) {
-      if (collision.gameObject.CompareTag("Player")) { _interactable = true;  }
+      if (collision.gameObject.CompareTag("Player")) { 
+        _interactable = true; _interactButton.gameObject.SetActive(true); _filler.gameObject.SetActive(false);}
     }
     private void OnTriggerExit2D(Collider2D collision) {
-      if (collision.gameObject.CompareTag("Player")) { _interactable = false; }
+      if (collision.gameObject.CompareTag("Player")) { 
+        _interactable = false; _interactButton.gameObject.SetActive(false); _filler.gameObject.SetActive(false);}
     }
     private void OnEnable() {
       HoleManager.PlusHoleEvent.EventPlusHole += IncreaseHoleNumber;

@@ -33,6 +33,7 @@ namespace SOG.HoleManager {
         GameObject hole = Instantiate(_hole, parent);
         Hole holeScript = hole.GetComponent<Hole>();
         holeScript.Interactable = false; holeScript.Elapsed = 0f; holeScript.Interacted = false;
+        holeScript.Instantiate();
         hole.SetActive(false);_allHoles.Add(hole);_usableHoles.Add(hole);}
     }
     private GameObject GetHole() {
@@ -66,7 +67,8 @@ namespace SOG.HoleManager {
         if (time <= elapsed) {
           Vector3 positionOfHole = getPositionForHole(); GameObject hole = GetHole();
           if (hole != null) {
-            hole.transform.position = positionOfHole; hole.SetActive(true); PlusHoleEvent.Raise();}
+            hole.transform.position = positionOfHole; hole.SetActive(true);
+            hole.GetComponent<Hole>().PlacedInWorld(); PlusHoleEvent.Raise();}
           time = (float)(_random.NextDouble() * (_maxTimeToNewHole - _minTimeToNewHole) + _minTimeToNewHole);
           elapsed = 0f;}
         elapsed += Time.deltaTime * LocalTime.DeltaTime;
