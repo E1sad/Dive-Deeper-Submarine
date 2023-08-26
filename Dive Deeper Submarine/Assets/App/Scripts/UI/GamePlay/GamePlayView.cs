@@ -13,7 +13,7 @@ namespace SOG.UI.GamePlay{
 
     #region My Methods
     public void SetScoreText(int integer) {
-      text.text = Convert.ToString(integer);
+      text.text = Convert.ToString(integer)+"m";
     }
     #endregion
 
