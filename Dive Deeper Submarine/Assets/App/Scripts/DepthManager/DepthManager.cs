@@ -1,5 +1,6 @@
 using SOG.EngineManager;
 using SOG.GameManger;
+using SOG.SaveManager;
 using SOG.UI.GameOver;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace SOG.DepthManager{
 
     //Internal varibales
     private float _depth;
-    private int _bestDepth = 0;
+    private int _bestDepth;
     private int _previousDepth = 0;
     private bool _isEngineWorking;
 
@@ -40,11 +41,15 @@ namespace SOG.DepthManager{
     private void EngineRepairedEventHandler() { _isEngineWorking = true; }
     private void EngineBrokeEventHandler() { _isEngineWorking = false; }
     private void onGameOverEventHandler() {
-      if(_bestDepth <= _previousDepth) { _bestDepth = _previousDepth; }
+      if(_bestDepth <= _previousDepth) { 
+        _bestDepth = _previousDepth; SaveBestScore.Raise(_bestDepth); }
       GameOverDepthScoreEvent.Raise(_previousDepth, _bestDepth);
     }
     private void EventGameStateChangedHandler(OnGameStateChangeEventArg eventArg) {
       OnGameStateChanged(eventArg.Current, eventArg.Previous);
+    }
+    private void SendDataToObjectsEventHandler(int bestScore, bool isMusicon, bool isSoundOn) {
+      _bestDepth = bestScore; Debug.Log(_bestDepth);
     }
     #endregion
 
@@ -57,12 +62,14 @@ namespace SOG.DepthManager{
       EngineBrokeEvent.EventEngineBroke += EngineBrokeEventHandler;
       GameOverEvent.OnGameOverEvent += onGameOverEventHandler;
       OnGameStateChangedEvent.EventGameStateChanged += EventGameStateChangedHandler;
+      SendDataToObjects.SendDataToObjectsEvent += SendDataToObjectsEventHandler;
     }
     private void OnDisable() {
       EngineRepairedEvent.EventEngineRepaired -= EngineRepairedEventHandler;
       EngineBrokeEvent.EventEngineBroke -= EngineBrokeEventHandler;
       GameOverEvent.OnGameOverEvent -= onGameOverEventHandler;
       OnGameStateChangedEvent.EventGameStateChanged -= EventGameStateChangedHandler;
+      SendDataToObjects.SendDataToObjectsEvent -= SendDataToObjectsEventHandler;
     }
     #endregion
   }

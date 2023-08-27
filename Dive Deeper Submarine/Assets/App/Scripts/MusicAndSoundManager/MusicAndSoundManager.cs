@@ -1,3 +1,4 @@
+using SOG.SaveManager;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -36,16 +37,21 @@ namespace SOG
       _walkingSoundSource.Stop();
     }
     public void ButtonSound() {PlaySoundEffects(_buttonSound);}
-    public void MuteMusic() {_backgroundMusicSource.mute = true; }
-    public void UnMuteMusic() { _backgroundMusicSource.mute = false; }
+    public void MuteMusic() {
+      _backgroundMusicSource.mute = true; SaveMusicSettings.Raise(true, _soundEffectsSource.mute);
+    }
+    public void UnMuteMusic() { 
+      _backgroundMusicSource.mute = false; SaveMusicSettings.Raise(false, _soundEffectsSource.mute);
+    }
     public void MuteSounds() {
       _soundEffectsSource.mute = true; _engineSoundSource.mute = true; _waterSoundSource.mute = true;
-      _walkingSoundSource.mute = true; 
+      _walkingSoundSource.mute = true; SaveMusicSettings.Raise(_backgroundMusicSource.mute, true);
     }
     public void UnMuteSounds() {
       _soundEffectsSource.mute = false; _engineSoundSource.mute = false; _waterSoundSource.mute = false;
-      _walkingSoundSource.mute = false;
+      _walkingSoundSource.mute = false; SaveMusicSettings.Raise(_backgroundMusicSource.mute, false);
     }
+
     #endregion
 
     #region Unity's Methods

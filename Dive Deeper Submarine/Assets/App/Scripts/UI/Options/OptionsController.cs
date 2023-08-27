@@ -1,3 +1,4 @@
+using SOG.SaveManager;
 using SOG.UI.Menu;
 using System.Collections;
 using System.Collections.Generic;
@@ -38,15 +39,26 @@ namespace SOG.UI.Options{
       else {
         MusicAndSoundManager.Instance.MuteSounds(); _soundToggleBox.sprite = _toggleOff;}
     }
+    private void SendDataToObjectsEventHandler(int bestScore, bool isMusicon, bool isSoundOn) {
+      _isMusicOn = !isMusicon; _isSoundOn = !isSoundOn;
+      if (_isMusicOn) {
+        MusicAndSoundManager.Instance.UnMuteMusic(); _muiscToggleBox.sprite = _toggleOn;
+      } else { MusicAndSoundManager.Instance.MuteMusic(); _muiscToggleBox.sprite = _toggleOff; }
+      if (_isSoundOn) {
+        MusicAndSoundManager.Instance.UnMuteSounds(); _soundToggleBox.sprite = _toggleOn;
+      } else { MusicAndSoundManager.Instance.MuteSounds(); _soundToggleBox.sprite = _toggleOff; }
+    }
     #endregion
 
     #region Unity's Methods
-    private void Start(){from = UIEnum.MENU;_isSoundOn = true; _isMusicOn = true; }
+    private void Start(){from = UIEnum.MENU;}
     private void OnEnable(){
       OptionsButtonEvent.OnOptionsButtonPressedEvent += onOptionsButtonPressedEventHandler;
+      SendDataToObjects.SendDataToObjectsEvent += SendDataToObjectsEventHandler;
     }
     private void OnDisable(){
       OptionsButtonEvent.OnOptionsButtonPressedEvent -= onOptionsButtonPressedEventHandler;
+      SendDataToObjects.SendDataToObjectsEvent -= SendDataToObjectsEventHandler;
     }
     #endregion
   }
