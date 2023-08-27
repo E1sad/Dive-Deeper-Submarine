@@ -9,6 +9,8 @@ namespace SOG.UI.Options{
 
     #region My Methods
     public void OnBackButtonPressed(){ controller.OnBackButtonPressed();}
+    public void MusicToggleButtonpressed() {controller.MusicToggle();}
+    public void SoundToggleButtonpressed() { controller.SoundToggle(); }
     #endregion
 
     #region Unity's Methods

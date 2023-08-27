@@ -14,6 +14,7 @@ namespace SOG.FloodManager{
     [SerializeField] private GameObject _waterGameObject;
     [SerializeField] private RectTransform _interactButton;
     [SerializeField] private UnityEngine.UI.Image _filler;
+    [SerializeField] private AudioClip _floodClip;
 
     //Internal varibales
     private int _holeNumber;
@@ -21,23 +22,32 @@ namespace SOG.FloodManager{
     private bool _interactable;
     private bool _interacted;
     private bool _isElectricPowerOn;
+    private bool _doesMusicOff;
 
     #region My Methods
     private void OnGameStateChanged(GameStateEnum current, GameStateEnum previous) {
       switch (current) {
         case GameStateEnum.GAME_PLAY: GamePlayState(previous); break;
         case GameStateEnum.IDLE: IdleState(); break;
-        case GameStateEnum.PAUSED: break;
+        case GameStateEnum.PAUSED: PauseState(); break;
       }
     }
     private void GamePlayState(GameStateEnum previous) {
       if (previous == GameStateEnum.IDLE) {
         _holeNumber = 0; _waterLevel = 0f; _interactable = false; _interacted = false; _isElectricPowerOn = true;
-        _interactButton.gameObject.SetActive(false); _filler.gameObject.SetActive(false);}
+        _interactButton.gameObject.SetActive(false); _filler.gameObject.SetActive(false); _doesMusicOff = true;
+        MusicAndSoundManager.Instance.StopWaterSound();}
+      else {
+        if (_holeNumber >= 1 && !_doesMusicOff) {
+          MusicAndSoundManager.Instance.WaterSound(_floodClip); _doesMusicOff = true;}}
     }
     private void IdleState() {
       _holeNumber = 0; _waterLevel = 0f; _interactable = false; _interacted = false; _isElectricPowerOn = true;
-      _interactButton.gameObject.SetActive(false); _filler.gameObject.SetActive(false);
+      _interactButton.gameObject.SetActive(false); _filler.gameObject.SetActive(false); _doesMusicOff = true;
+      MusicAndSoundManager.Instance.StopWaterSound();
+    }
+    private void PauseState() {
+      MusicAndSoundManager.Instance.StopWaterSound();
     }
     private void WaterLevel() {
       if (_waterLevel >= 4) { GameOverEvent.Raise(); _waterLevel = 0;  return; }
@@ -53,8 +63,16 @@ namespace SOG.FloodManager{
         _filler.gameObject.SetActive(true); } 
       else { _filler.gameObject.SetActive(false); }
     }
-    private void IncreaseHoleNumber() {_holeNumber++;}
-    private void DecreaseHoleNumber() { _holeNumber--;}
+    private void IncreaseHoleNumber() {
+      _holeNumber++; 
+      if (_holeNumber >= 1 && _doesMusicOff) { 
+        MusicAndSoundManager.Instance.WaterSound(_floodClip); _doesMusicOff = false; }
+    }
+    private void DecreaseHoleNumber() { 
+      _holeNumber--;
+      if (_holeNumber < 1) {
+        MusicAndSoundManager.Instance.StopWaterSound(); _doesMusicOff = true;}
+    }
     private void InteractionButtonPressedEventHandler() { _interacted = true; }
     private void InteractionButtonReleasedEventHandler() { _interacted = false; }
     private void ElectricPowerOutEventHandler() { _isElectricPowerOn = false; }

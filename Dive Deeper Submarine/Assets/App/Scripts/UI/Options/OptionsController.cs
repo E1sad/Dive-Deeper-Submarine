@@ -7,9 +7,15 @@ namespace SOG.UI.Options{
   public class OptionsController : MonoBehaviour{
     [Header("Links")]
     [SerializeField] private OptionsView view;
+    [SerializeField] private Sprite _toggleOn;
+    [SerializeField] private Sprite _toggleOff;
+    [SerializeField] private UnityEngine.UI.Image _muiscToggleBox;
+    [SerializeField] private UnityEngine.UI.Image _soundToggleBox;
 
     //Internal Variables 
     private UIEnum from;
+    private bool _isMusicOn;
+    private bool _isSoundOn;
 
     #region My Methods
     public void OnBackButtonPressed() { 
@@ -18,10 +24,24 @@ namespace SOG.UI.Options{
     private void onOptionsButtonPressedEventHandler(OptionsButtonEventArgs eventArgs){
       from = eventArgs.From; view.gameObject.SetActive(true);
     }
+    public void MusicToggle() {
+      _isMusicOn = !_isMusicOn;
+      if (_isMusicOn) {
+        MusicAndSoundManager.Instance.UnMuteMusic(); _muiscToggleBox.sprite = _toggleOn;
+      } else {
+        MusicAndSoundManager.Instance.MuteMusic(); _muiscToggleBox.sprite = _toggleOff;}
+    }
+    public void SoundToggle() {
+      _isSoundOn = !_isSoundOn;
+      if (_isSoundOn) {
+        MusicAndSoundManager.Instance.UnMuteSounds(); _soundToggleBox.sprite = _toggleOn;}
+      else {
+        MusicAndSoundManager.Instance.MuteSounds(); _soundToggleBox.sprite = _toggleOff;}
+    }
     #endregion
 
     #region Unity's Methods
-    private void Start(){from = UIEnum.MENU;}
+    private void Start(){from = UIEnum.MENU;_isSoundOn = true; _isMusicOn = true; }
     private void OnEnable(){
       OptionsButtonEvent.OnOptionsButtonPressedEvent += onOptionsButtonPressedEventHandler;
     }

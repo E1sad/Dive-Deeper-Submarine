@@ -10,7 +10,10 @@ namespace SOG.GameManger {
     [Header("Variables")]
     [SerializeField] private GameStateEnum _starterState;
 
-    //[Header("Links")]
+    [Header("Links")]
+    [SerializeField] private AudioClip _idleAudioClip;
+    [SerializeField] private AudioClip _gamePlayAudioClip;
+    [SerializeField] private AudioClip _gameOverAudioClip;
 
     //Internal varibales
     private GameStateEnum _previousGameState, _currentGameState;
@@ -19,9 +22,12 @@ namespace SOG.GameManger {
     private void OnGameStateChanged(GameStateEnum current){
       OnGameStateChangedEvent.Raise(new OnGameStateChangeEventArg(current, _previousGameState));
       switch (current){
-        case GameStateEnum.GAME_PLAY: LocalTime.DeltaTime = 1f; break;
-        case GameStateEnum.IDLE: LocalTime.DeltaTime = 0f; break;
-        case GameStateEnum.PAUSED: LocalTime.DeltaTime = 0f; PauseEvent.Raise(); break;}
+        case GameStateEnum.GAME_PLAY: LocalTime.DeltaTime = 1f;
+          MusicAndSoundManager.Instance.PlayBackgroundMusic(_gamePlayAudioClip); break;
+        case GameStateEnum.IDLE: LocalTime.DeltaTime = 0f;
+          MusicAndSoundManager.Instance.PlayBackgroundMusic(_idleAudioClip); break;
+        case GameStateEnum.PAUSED: LocalTime.DeltaTime = 0f; PauseEvent.Raise();
+          MusicAndSoundManager.Instance.PlayBackgroundMusic(_idleAudioClip); break;}
     }
     private void GameStateChange() {
       if (_currentGameState == GameStateEnum.GAME_PLAY || _currentGameState == GameStateEnum.PAUSED) {
@@ -54,7 +60,10 @@ namespace SOG.GameManger {
       _currentGameState = GameStateEnum.GAME_PLAY;
       OnGameStateChanged(GameStateEnum.GAME_PLAY); _previousGameState = GameStateEnum.GAME_PLAY;
     }
-    private void onGameOverEventHandler() { LocalTime.DeltaTime = 0f; }
+    private void onGameOverEventHandler() { 
+      LocalTime.DeltaTime = 0f; MusicAndSoundManager.Instance.PlaySoundEffects(_gameOverAudioClip);
+      MusicAndSoundManager.Instance.StopAllSounds();
+    }
     #endregion
 
     #region Unity's Methods

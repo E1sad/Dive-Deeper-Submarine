@@ -13,8 +13,10 @@ namespace SOG.Player{
     [SerializeField] private Rigidbody2D _playerRb;
     [SerializeField] private Transform _captainSpritesTransform;
     [SerializeField] private Animator _captainAnimator;
+    [SerializeField] private AudioClip _walkingSound;
 
     //Internal varibales
+    private bool _isSoundOn;
 
     #region My Methods
     private void OnGameStateChanged(GameStateEnum current, GameStateEnum previous) {
@@ -24,10 +26,10 @@ namespace SOG.Player{
         case GameStateEnum.PAUSED: break;}
     }
     private void GamePlayState(GameStateEnum previous) {
-      if (previous == GameStateEnum.IDLE) {}
+      if (previous == GameStateEnum.IDLE) { _isSoundOn = false; }
     }
     private void IdleState() {
-      transform.position = new Vector3(0f,0f,0f);
+      transform.position = new Vector3(0f,0f,0f); _isSoundOn = false;
     }
     private void PlayerMovement() {
       float horizontalInput = Input.GetAxisRaw("Horizontal");
@@ -36,7 +38,11 @@ namespace SOG.Player{
       if (horizontalInput != 0) {
         _captainSpritesTransform.localScale = new Vector3(Mathf.Round(horizontalInput), 1f, 1f);
         _captainAnimator.SetBool("IsRunning", true);
-      }else {_captainAnimator.SetBool("IsRunning", false);}
+        if (!_isSoundOn) {
+          MusicAndSoundManager.Instance.WalkingSound(_walkingSound); _isSoundOn = true;}
+      }else {
+        _captainAnimator.SetBool("IsRunning", false); MusicAndSoundManager.Instance.StopWalkingSound();
+        _isSoundOn = false;}
     }
     private void EventGameStateChangedHandler(OnGameStateChangeEventArg eventArg) {
       OnGameStateChanged(eventArg.Current, eventArg.Previous);

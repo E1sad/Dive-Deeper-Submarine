@@ -13,7 +13,8 @@ namespace SOG.EngineManager{
     [Header("Links")]
     [SerializeField] private RectTransform _interactButton;
     [SerializeField] private UnityEngine.UI.Image _filler;
-    [SerializeField] private GameObject _bubble;
+    [SerializeField] private AudioClip _engineWorkingSound;
+    [SerializeField] private AudioClip _engineBrokenSound;
     [SerializeField] private ParticleSystem[] _bubbles;
 
     //Internal varibales
@@ -29,18 +30,25 @@ namespace SOG.EngineManager{
       switch (current) {
         case GameStateEnum.GAME_PLAY: GamePlayState(previous); break;
         case GameStateEnum.IDLE: IdleState(); break;
-        case GameStateEnum.PAUSED: break;
+        case GameStateEnum.PAUSED: PauseState(); break;
       }
     }
     private void GamePlayState(GameStateEnum previous) {
       if (previous == GameStateEnum.IDLE) { 
         StartEngineFailureCoroutine(); _elapsed = 0f; _interactable = false;_interacted = false;
         _isEngineWorking = true; _filler.fillAmount = 0f; _interactButton.gameObject.SetActive(false);
-        StartEngineFailureCoroutine();} 
+        StartEngineFailureCoroutine(); MusicAndSoundManager.Instance.EngineSound(_engineWorkingSound);} 
+      else {
+        if(_isEngineWorking) MusicAndSoundManager.Instance.EngineSound(_engineWorkingSound);
+      }
     }
     private void IdleState() {
       StopEngineFailureCoroutine(); _elapsed = 0f; _interactable = false; _interacted = false;
       _isEngineWorking = true; _filler.fillAmount = 0f; _interactButton.gameObject.SetActive(false);
+      MusicAndSoundManager.Instance.StopEngineSound();
+    }
+    private void PauseState() {
+      MusicAndSoundManager.Instance.StopEngineSound();
     }
     private void Repair() {
       if (_isEngineWorking) return; 
@@ -49,7 +57,8 @@ namespace SOG.EngineManager{
       if (_interacted) {
         _elapsed += Time.deltaTime * LocalTime.DeltaTime; _filler.fillAmount = _elapsed / _timeToRepair;
         if (_timeToRepair <= _elapsed) { EngineRepairedEvent.Raise(); ; _isEngineWorking = true;
-          StartEngineFailureCoroutine(); _interactButton.gameObject.SetActive(false); StartBubbles();}
+          StartEngineFailureCoroutine(); _interactButton.gameObject.SetActive(false); StartBubbles();
+          MusicAndSoundManager.Instance.EngineSound(_engineWorkingSound);}
       } else { _elapsed = 0f; _filler.fillAmount = 0f; }
     }
     private IEnumerator EngineFailure() {
@@ -58,7 +67,8 @@ namespace SOG.EngineManager{
       while (true) {
         elapsed += Time.deltaTime * LocalTime.DeltaTime;
         if (failureTime <= elapsed) {EngineBrokeEvent.Raise(); _isEngineWorking = false; 
-          StopEngineFailureCoroutine(); StopBubbles();}
+          StopEngineFailureCoroutine(); StopBubbles(); MusicAndSoundManager.Instance.StopEngineSound(); 
+          MusicAndSoundManager.Instance.PlaySoundEffects(_engineBrokenSound);}
         yield return null;}
     }
     private void StartEngineFailureCoroutine() {

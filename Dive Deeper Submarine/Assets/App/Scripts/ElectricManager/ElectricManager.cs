@@ -16,6 +16,8 @@ namespace SOG.ElectricManager{
     [SerializeField] private RectTransform _interactButton;
     [SerializeField] private UnityEngine.UI.Image _filler;
     [SerializeField] private SpriteRenderer _redLight;
+    [SerializeField] private AudioClip _powerOnSound;
+    [SerializeField] private AudioClip _powerOffSound;
 
     //Internal varibales
     private bool _interacted;
@@ -50,7 +52,7 @@ namespace SOG.ElectricManager{
       if (_interacted) {
         _interactButton.gameObject.SetActive(false); ElectricPowerRestoredEvent.Raise(); ; _isElectricOn = true; 
         StartElectricPowerFailureCoroutine(); this.gameObject.GetComponent<SpriteRenderer>().sprite=_ElectricOn;
-        StopRedLightCoroutine();} 
+        StopRedLightCoroutine(); MusicAndSoundManager.Instance.PlaySoundEffects(_powerOnSound);} 
       else { _filler.gameObject.SetActive(false); }
     }
     private IEnumerator ElectricPowerFailure() {
@@ -61,7 +63,8 @@ namespace SOG.ElectricManager{
         if (failureTime <= elapsed) {
           ElectricPowerOutEvent.Raise(); _isElectricOn = false;
           StopElectricPowerFailureCoroutine(); StartRedLightCoroutine();
-          this.gameObject.GetComponent<SpriteRenderer>().sprite = _ElectricOff;}
+          this.gameObject.GetComponent<SpriteRenderer>().sprite = _ElectricOff;
+          MusicAndSoundManager.Instance.PlaySoundEffects(_powerOffSound);}
         yield return null;}
     }
     private void StartElectricPowerFailureCoroutine() {
